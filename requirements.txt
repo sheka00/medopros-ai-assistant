@@ -1,0 +1,9 @@
+fastapi==0.110.0
+uvicorn==0.27.1
+python-multipart==0.0.9
+httpx
+PyJWT
+openai[aiohttp]
+python-dotenv
+aiohttp
+aiofiles

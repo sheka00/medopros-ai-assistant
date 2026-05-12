@@ -1,0 +1,23 @@
+name: medopros-unified
+
+services:
+  medopros:
+    build: .
+    container_name: medopros_unified
+    ports:
+      - "8001:8001"
+    volumes:
+      - ${HOME}/.cache:/root/.cache
+      - ./recordings:/app/recordings
+      - .:/app
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - TZ=Asia/Yekaterinburg
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

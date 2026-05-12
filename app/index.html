@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>МЕДОПРОС — Интеллектуальный помощник врача</title>
+    <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;600&display=swap"
+        rel="stylesheet">
+    <script src="/assets/js/lucide.min.js"></script>
+</head>
+
+<body>
+    <div id="app-loading" class="app-loading">
+        <div class="loader"></div>
+    </div>
+    <div class="app-container">
+
+
+        <!-- Main Screen (Physician Dashboard) -->
+        <section id="main-screen" class="screen">
+            <header class="app-header">
+                <div class="header-left">
+                    <a href="/" class="btn-back" title="На главную"><i data-lucide="arrow-left"></i></a>
+                    <div class="logo">КАБИНЕТ ВРАЧА</div>
+                </div>
+            </header>
+
+            <main class="doctor-dashboard">
+                <div class="invite-section">
+                    <h3>Создать ссылку для опроса пациента</h3>
+                    <div class="invite-form">
+                        <div class="field-label">Специализация врача:</div>
+                        <select id="doctor-type" class="modern-select">
+                            <option value="therapist">Терапевт</option>
+                            <option value="cardiologist">Кардиолог</option>
+                            <option value="neurologist">Невролог</option>
+                            <option value="default">Общий осмотр</option>
+                        </select>
+                        <div class="field-label">ФИО пациента:</div>
+                        <input type="text" id="patient-name" placeholder="Введите имя пациента">
+                        <button id="generate-link-btn" class="btn btn-primary">Сгенерировать ссылку</button>
+                    </div>
+                    <div id="generated-link-container" class="hidden">
+                        <div class="field-label">Готовая ссылка:</div>
+                        <div class="link-display" id="copy-link-wrapper" title="Нажмите, чтобы скопировать">
+                            <input type="text" id="share-link" readonly>
+                            <button id="copy-link-btn" class="btn-icon primary-action">
+                                <i data-lucide="copy" id="copy-icon"></i>
+                                <span id="copy-link-text">Копировать</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="history-list">
+                    <div class="history-header">
+                        <h3>История обследований</h3>
+                        <button id="refresh-history-btn" class="refresh-btn">
+                            <i data-lucide="refresh-cw"></i>
+                        </button>
+                    </div>
+                    <div id="history-items">
+                        <!-- History items injected here -->
+                    </div>
+                </div>
+            </main>
+        </section>
+
+        <!-- Patient Screen (Recording Interface) -->
+        <section id="patient-screen" class="screen">
+            <header class="app-header">
+                <div class="header-left">
+                    <a href="/app" class="btn-back" title="В кабинет врача"><i data-lucide="arrow-left"></i></a>
+                    <div class="logo">МЕДОПРОС</div>
+                </div>
+                <div id="patient-doctor-title" class="doctor-title">Общий осмотр</div>
+            </header>
+
+            <main class="recorder-section">
+                <div class="patient-info">
+                    <h2 id="patient-welcome">Здравствуйте</h2>
+                    <p>Пожалуйста, ответьте на вопросы максимально подробно.</p>
+                </div>
+
+                <div id="dynamic-questions" class="questions-card">
+                    <!-- Questions will be injected here -->
+                </div>
+
+                <div class="recording-ui">
+                    <div class="status-indicator">
+                        <div id="p-status-dot" class="dot"></div>
+                        <span id="p-status-text">Нажмите красную кнопку, чтобы начать</span>
+                    </div>
+
+                    <div class="recording-controls">
+                        <button id="p-record-btn" class="btn-record">
+                            <div class="record-icon"></div>
+                        </button>
+                        <p id="p-timer">00:00</p>
+                        <p class="limit-hint" style="font-size: 0.7rem; opacity: 0.6; margin-top: 4px;">макс. 10 минут
+                        </p>
+                    </div>
+
+                    <div id="p-post-recording" class="post-recording hidden">
+                        <div class="preview-player">
+                            <button id="p-preview-play-btn" class="player-btn small">
+                                <svg id="p-preview-play-icon" viewBox="0 0 24 24" width="20" height="20" fill="white">
+                                    <path d="M8 5v14l11-7z" />
+                                </svg>
+                                <svg id="p-preview-pause-icon" class="hidden" viewBox="0 0 24 24" width="20" height="20"
+                                    fill="white">
+                                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                                </svg>
+                            </button>
+                            <div class="preview-progress-container">
+                                <input type="range" id="p-preview-progress" min="0" max="100" value="0">
+                                <span id="p-preview-timer">00:00</span>
+                            </div>
+                        </div>
+                        <div class="action-buttons">
+                            <button id="p-rerecord-btn" class="btn btn-secondary">Перезаписать</button>
+                            <button id="p-send-btn" class="btn btn-primary">Отправить врачу</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </section>
+
+        <!-- Result Screen -->
+        <section id="result-screen" class="screen">
+            <header class="app-header">
+                <button id="back-btn" class="btn-back"><i data-lucide="chevron-left"></i></button>
+                <div class="logo">Результат анализа</div>
+                <button id="delete-btn" class="btn-icon delete"><i data-lucide="trash-2"></i></button>
+            </header>
+
+            <div class="result-content">
+                <div id="patient-success-banner" class="success-banner hidden">
+                    <div class="success-icon">✅</div>
+                    <div class="success-text">
+                        <h4>Запись успешно отправлена!</h4>
+                        <p>Ваш врач получил данные. Ниже вы можете проверить результаты распознавания.</p>
+                    </div>
+                </div>
+                <div class="result-card">
+                    <div class="result-header">
+                        <div class="result-type">Извлечено искусственным интеллектом</div>
+                        <div class="result-meta">
+                            <span id="result-date"></span>
+                        </div>
+                    </div>
+
+                    <!-- Audio Player -->
+                    <div class="modern-player">
+                        <div class="player-controls">
+                            <button id="play-pause-btn" class="player-btn">
+                                <svg id="play-icon" viewBox="0 0 24 24">
+                                    <path d="M8 5v14l11-7z" />
+                                </svg>
+                                <svg id="pause-icon" class="hidden" viewBox="0 0 24 24">
+                                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                                </svg>
+                            </button>
+                            <div class="player-progress-container">
+                                <input type="range" id="player-progress" min="0" max="100" value="0">
+                                <div class="player-time">
+                                    <span id="current-time">0:00</span> / <span id="total-duration">0:00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="analysis-section">
+                        <div class="section-title">
+                            <span class="icon"><i data-lucide="clipboard-check"></i></span> Резюме и жалобы
+                        </div>
+                        <div id="summary-text" class="markdown-body">
+                            <!-- LLM result injected here -->
+                        </div>
+                    </div>
+
+                    <div class="analysis-section secondary">
+                        <div class="section-title">
+                            <span class="icon"><i data-lucide="message-square-text"></i></span> Полная расшифровка
+                        </div>
+                        <div id="transcription-text">
+                            <!-- ASR result injected here -->
+                        </div>
+                    </div>
+                </div>
+                <div id="patient-finish-container" class="hidden" style="margin-top: 1.5rem;">
+                    <button id="finish-btn" class="btn btn-primary">Завершить</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="message-screen" class="screen">
+            <div class="auth-card" style="text-align: center;">
+                <div class="logo" style="margin-bottom: 2rem;">МЕДОПРОС</div>
+                <div class="error-icon" style="font-size: 3rem; margin-bottom: 1rem;">🛡️</div>
+                <h2 id="message-title" style="margin-bottom: 1rem;">Доступ ограничен</h2>
+                <p id="message-text" style="opacity: 0.8; line-height: 1.5;">Эта ссылка более неактивна или была
+                    использована ранее. Пожалуйста, обратитесь к вашему лечащему врачу для получения новой ссылки.</p>
+            </div>
+        </section>
+
+        <footer>
+            &copy; 2026 МЕДОПРОС. Интеллектуальный помощник врача.
+        </footer>
+    </div>
+
+    <script src="assets/js/script.js"></script>
+</body>
+
+</html>

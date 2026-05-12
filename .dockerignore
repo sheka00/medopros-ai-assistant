@@ -1,0 +1,16 @@
+.git
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.env
+.vscode
+.idea
+recordings/
+*.mp3
+*.wav
+*.m4a
+*.webm
+docker-compose.yml
+Dockerfile
+.dockerignore

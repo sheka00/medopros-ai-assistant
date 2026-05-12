@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>МедОпрос — Автоматизация сбора анамнеза и формирования протоколов</title>
+    <meta name="description"
+        content="ИИ-ассистент МедОпрос интегрируется в рабочий процесс врача, автоматизирует сбор первичных данных пациента и формирует структурированные записи для МИС в реальном времени.">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Icons -->
+    <script src="assets/js/lucide.min.js"></script>
+    <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
+
+    <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+
+<body>
+    <header class="header">
+        <nav class="nav container">
+            <a href="#" class="logo">
+                <span class="logo-icon">
+                    <i data-lucide="activity"></i>
+                </span>
+                <span class="logo-text">Мед<span>Опрос</span></span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="#features">Преимущества</a></li>
+                <li><a href="#how-it-works">Как это работает</a></li>
+                <li><a href="#roi">Окупаемость</a></li>
+                <li><a href="#security">Безопасность</a></li>
+            </ul>
+            <a href="#contact" class="btn btn-primary nav-cta">Получить консультацию</a>
+            <button class="mobile-menu-btn">
+                <i data-lucide="menu"></i>
+            </button>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-bg">
+                <div class="blob blob-1"></div>
+                <div class="blob blob-2"></div>
+            </div>
+            <div class="container hero-content">
+                <div class="hero-text-area">
+                    <span class="badge">Корпоративное решение для медицины</span>
+                    <h1>Автоматизация сбора <span>анамнеза</span> и&nbsp;формирования протоколов.</h1>
+                    <p>ИИ-ассистент МедОпрос интегрируется в рабочий процесс врача, автоматизирует сбор первичных данных
+                        пациента и формирует структурированные записи для МИС в реальном времени.</p>
+                    <div class="hero-actions">
+                        <a href="#contact" class="btn btn-primary btn-lg">Получить консультацию</a>
+                        <a href="/app/" class="btn btn-demo btn-lg" target="_blank">
+                            <i data-lucide="mic" style="margin-right: 10px;"></i>
+                            Техническая презентация
+                        </a>
+                    </div>
+                    <div class="hero-stats">
+                        <div class="stat-item">
+                            <span class="stat-value">~10 мин</span>
+                            <span class="stat-label">экономии на приеме</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">100%</span>
+                            <span class="stat-label">точность данных</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero-image-area">
+                    <div class="hero-visual">
+                        <img src="assets/images/hero_visual_main.png" alt="Medical AI Visual" class="hero-main-img">
+                        <div class="visual-glow"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- New Demo & Algorithm Section -->
+        <section id="how-it-works" class="demo-section section">
+            <div class="container">
+                <div class="demo-grid">
+                    <div class="demo-video-area">
+                        <div class="phone-mockup glass">
+                            <video id="hero-demo-video" class="product-screenshot" autoplay muted loop playsinline
+                                controls preload="auto">
+                                <source src="/assets/video/promo.mp4" type="video/mp4">
+                                Ваш браузер не поддерживает видео.
+                            </video>
+                        </div>
+                    </div>
+
+                    <div class="demo-content-area">
+                        <div class="section-header align-left">
+                            <span class="badge">Процесс</span>
+                            <h2>Как работает <span>МедОпрос</span></h2>
+                            <p>Бесшовный процесс сбора данных: от автоматической записи до готового медицинского
+                                протокола в вашей системе.</p>
+                        </div>
+
+                        <div class="algo-steps">
+                            <div class="algo-card glass">
+                                <div class="algo-num">01</div>
+                                <div class="algo-info">
+                                    <h4>Генерация ссылки</h4>
+                                    <p>Ваша МИС автоматически отправляет пациенту Email или SMS с уникальной ссылкой за
+                                        24 часа до визита.</p>
+                                </div>
+                            </div>
+                            <div class="algo-card glass">
+                                <div class="algo-num">02</div>
+                                <div class="algo-info">
+                                    <h4>Голосовой анамнез</h4>
+                                    <p>Пациент переходит по ссылке и в режиме диалога отвечает на вопросы о жалобах и
+                                        истории болезни.</p>
+                                </div>
+                            </div>
+                            <div class="algo-card glass">
+                                <div class="algo-num">03</div>
+                                <div class="algo-info">
+                                    <h4>Расшифровка и экспорт</h4>
+                                    <p>ИИ мгновенно обрабатывает запись, извлекает медицинские факты и формирует
+                                        протокол для МИС.</p>
+                                </div>
+                            </div>
+                            <div class="algo-card glass">
+                                <div class="algo-num">04</div>
+                                <div class="algo-info">
+                                    <h4>Готовый черновик</h4>
+                                    <p>Врач открывает карту пациента в МИС и видит уже предзаполненный протокол осмотра.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Integrations Grid -->
+        <section class="integrations-section">
+            <div class="container">
+                <div class="integrations-glass glass">
+                    <span class="integrations-label">Интегрируемся с ведущими МИС:</span>
+                    <div class="mis-logo">1С:Медицина</div>
+                    <div class="mis-logo">Инфоклиника</div>
+                    <div class="mis-logo">Медиалог</div>
+                    <div class="mis-logo">БАРС</div>
+                    <div class="mis-logo">ЕМИАС</div>
+                    <div class="mis-logo others">и&nbsp;многие другие</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Killer Features Section -->
+        <section id="features" class="features section">
+            <div class="container">
+                <div class="section-header">
+                    <span class="badge">Функциональность</span>
+                    <h2>Автоматизация <span>рутины</span> на каждом этапе приема</h2>
+                    <p>Система автоматизирует сбор и структурирование первичных данных пациента, высвобождая время
+                        специалистов.</p>
+                </div>
+                <div class="feature-grid">
+                    <div class="feature-card glass">
+                        <div class="icon-box"><i data-lucide="zap"></i></div>
+                        <h3>Контекстный прием</h3>
+                        <p>Доступ к анамнезу за 5 минут до визита. Переход сразу к диагностике без первичного опроса.
+                        </p>
+                    </div>
+                    <div class="feature-card glass">
+                        <div class="icon-box"><i data-lucide="message-square"></i></div>
+                        <h3>Автоматизированный анамнез</h3>
+                        <p>Дистанционный сбор жалоб через голосовое интервью. Сбор деталей, которые упускаются на очном
+                            приеме.</p>
+                    </div>
+                    <div class="feature-card glass">
+                        <div class="icon-box"><i data-lucide="file-text"></i></div>
+                        <h3>Интеграция с МИС</h3>
+                        <p>Автогенерация медицинского протокола из речи пациента. Валидация данных врачом в несколько
+                            кликов.</p>
+                    </div>
+                    <div class="feature-card glass">
+                        <div class="icon-box"><i data-lucide="shield-alert"></i></div>
+                        <h3>Минимизация рисков</h3>
+                        <p>Автоматическое выявление аллергий и «красных флагов». Снижение влияния человеческого фактора.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Economics Section -->
+        <section id="roi" class="roi-section section">
+            <div class="container">
+                <div class="section-header">
+                    <span class="badge">Бизнес-эффект</span>
+                    <h2>Экономика <span>эффективности</span> медцентра</h2>
+                    <p>Внедрение системы МедОпрос напрямую влияет на пропускную способность клиники и выручку на один
+                        кабинет.</p>
+                </div>
+
+                <div class="economics-grid glass">
+                    <div class="econ-column">
+                        <div class="econ-tag tag-red">Без МедОпроса</div>
+                        <ul class="econ-list">
+                            <li><span>12 мин</span> среднее время сбора жалоб вручную</li>
+                            <li><span>12-14</span> пациентов — предел смены одного врача</li>
+                            <li><span>70% времени</span> работа с документацией на приеме</li>
+                            <li><span>Дефицит</span> времени на качественный осмотр и лечение</li>
+                        </ul>
+                    </div>
+
+                    <div class="econ-divider">
+                        <div class="vs-circle">VS</div>
+                    </div>
+
+                    <div class="econ-column">
+                        <div class="econ-tag tag-green">Система МедОпрос</div>
+                        <ul class="econ-list highlight">
+                            <li><span>
+                                    < 2 мин</span> валидация готового протокола</li>
+                            <li><span>+2 пациента</span> к пропускной способности смены</li>
+                            <li><span>100% фокус</span> на пациенте во время визита</li>
+                            <li><span>150%+</span> окупаемость в первый месяц</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="roi-summary-cards">
+                    <div class="roi-summary-card glass">
+                        <h4>37 часов</h4>
+                        <p>экономии времени врача в месяц</p>
+                    </div>
+                    <div class="roi-summary-card glass">
+                        <h4>800 000 ₽</h4>
+                        <p>средний прирост выручки на 10 врачей</p>
+                    </div>
+                    <div class="roi-summary-card glass highlight-border">
+                        <h4>14 дней</h4>
+                        <p>средний срок полной окупаемости системы</p>
+                    </div>
+                </div>
+
+                <div class="roi-cta">
+                    <a href="#contact" class="btn btn-primary btn-lg">Рассчитать под мою клинику</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Security Section -->
+        <section id="security" class="security section">
+            <div class="container">
+                <div class="security-grid glass">
+                    <div class="security-content">
+                        <h2>Безопасность и соответствие <span>стандартам</span></h2>
+                        <p>Мы обеспечиваем защиту персональных данных пациентов на уровне банковских систем и в строгом
+                            соответствии с законодательством РФ.</p>
+                        <ul class="security-list">
+                            <li><i data-lucide="shield-check"></i> Соответствие ФЗ-152 «О персональных данных»</li>
+                            <li><i data-lucide="lock"></i> Шифрование данных по протоколу AES-256</li>
+                            <li><i data-lucide="server"></i> Хранение данных на серверах в РФ (Tier III)</li>
+                            <li><i data-lucide="eye-off"></i> Полная деперсонализация при обработке алгоритмами</li>
+                        </ul>
+                    </div>
+                    <div class="security-badges">
+                        <div class="badge-item">
+                            <i data-lucide="database"></i>
+                            <span>ФЗ-152</span>
+                        </div>
+                        <div class="badge-item">
+                            <i data-lucide="shield"></i>
+                            <span>SSL-EV</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ Section -->
+        <section id="faq" class="faq section">
+            <div class="container">
+                <div class="section-header">
+                    <span class="badge">Вопросы и ответы</span>
+                    <h2>Ответы на <span>популярные</span> вопросы</h2>
+                    <p>Основные моменты по внедрению и использованию системы в реальных условиях клиники.</p>
+                </div>
+
+                <div class="faq-grid">
+                    <div class="faq-item glass">
+                        <h4>Реакция пациентов на опрос</h4>
+                        <p>Опросы проводятся в удобное для пациента время. К моменту приема врач уже знаком с историей,
+                            что исключает необходимость повторения жалоб и повышает доверие к специалисту.</p>
+                    </div>
+                    <div class="faq-item glass">
+                        <h4>Уточнение данных врачом</h4>
+                        <p>ИИ собирает базовый анамнез. Врач не тратит время на сбор общих данных, а сразу переходит к
+                            уточняющим вопросам и осмотру.</p>
+                    </div>
+                    <div class="faq-item glass">
+                        <h4>Окупаемость при неполной загрузке</h4>
+                        <p>Экономический эффект достигается за счет качества документации, снижения юридических рисков и
+                            возможности удлинить консультацию для повышения среднего чека.</p>
+                    </div>
+                    <div class="faq-item glass">
+                        <h4>Сложность и скорость внедрения</h4>
+                        <p>Интеграция с МИС происходит в максимально сжатые сроки и зависит от технических особенностей вашей системы. Эксплуатация не требует специального обучения персонала.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact" class="contact section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Оставьте заявку на <span>консультацию</span></h2>
+                    <p>Мы проведем аудит текущих процессов вашего медцентра и рассчитаем потенциал экономии времени и
+                        роста выручки.</p>
+                </div>
+                <div class="contact-grid">
+                    <form id="contact-form" class="contact-form glass">
+                        <div class="form-group">
+                            <label>Ваше имя</label>
+                            <input type="text" name="name" placeholder="Иван Иванов" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Название клиники</label>
+                            <input type="text" name="clinic" placeholder="МедЦентр Плюс" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Телефон</label>
+                            <input type="tel" name="phone" placeholder="+7 (999) 000-00-00" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">Получить консультацию</button>
+                        <div id="form-status" class="form-status"></div>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <a href="#" class="logo">
+                        <span class="logo-icon"><i data-lucide="activity"></i></span>
+                        <span class="logo-text">Мед<span>Опрос</span></span>
+                    </a>
+                    <p class="footer-desc">Будущее медицинского сервиса начинается с внимания и AI-технологий.</p>
+                </div>
+                <div class="footer-col">
+                    <h6>Навигация</h6>
+                    <ul class="footer-list">
+                        <li><a href="#features">Преимущества</a></li>
+                        <li><a href="#how-it-works">Как это работает</a></li>
+                        <li><a href="#roi">Экономика</a></li>
+                        <li><a href="#security">Безопасность</a></li>
+                        <li><a href="#faq">Вопросы</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h6>Контакты</h6>
+                    <ul class="footer-list">
+                        <li>ул. Малышева, 51, Екатеринбург</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 МедОпрос AI. Все права защищены.</p>
+
+            </div>
+        </div>
+    </footer>
+    <!-- Mobile Nav Overlay -->
+    <div class="mobile-nav-overlay">
+        <div class="mobile-nav-content glass">
+            <button class="close-menu"><i data-lucide="x"></i></button>
+            <ul class="mobile-nav-links">
+                <li><a href="#features">Преимущества</a></li>
+                <li><a href="#how-it-works">Как работает</a></li>
+                <li><a href="#roi">Экономика</a></li>
+                <li><a href="#security">Безопасность</a></li>
+                <li><a href="#faq">Вопросы</a></li>
+            </ul>
+            <a href="#contact" class="btn btn-primary">Получить консультацию</a>
+        </div>
+    </div>
+
+    <script src="assets/js/main.js"></script>
+</body>
+
+</html>
