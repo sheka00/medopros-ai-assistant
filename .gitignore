@@ -32,7 +32,7 @@ venv/
 ENV/
 
 # Project specific
-recordings/
+data/recordings/
 *.wav
 *.json
 !docker-compose.yml

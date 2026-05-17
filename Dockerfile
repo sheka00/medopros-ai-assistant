@@ -4,7 +4,7 @@ FROM python:3.12-slim
 # Рабочая директория
 WORKDIR /app
 
-# Системные зависимости для аудио (ffmpeg, libsndfile) и git
+# Системные зависимости для аудио (ffmpeg, libsndfile)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     libsndfile1 \
@@ -12,16 +12,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Сначала копируем зависимости
 COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Установка всех пакетов
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel
-RUN pip install --no-cache-dir --default-timeout=100 -r requirements.txt
+# Копируем проект
+COPY . .
 
-# Копируем весь проект (Лендинг + Приложение в папке /app)
-COPY . /app
-
-# Порт бэкенда (теперь он обслуживает и лендинг)
+# Порт бэкенда
 EXPOSE 8001
 
-# Запуск сервера
-CMD ["python", "backend.py"]
+# Запуск сервера через модуль (server.main)
+CMD ["python", "-m", "server.main"]

@@ -8,7 +8,7 @@ services:
       - "8001:8001"
     volumes:
       - ${HOME}/.cache:/root/.cache
-      - ./recordings:/app/recordings
+      - ./data:/app/data
       - .:/app
     env_file:
       - .env
