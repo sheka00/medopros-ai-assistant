@@ -18,7 +18,8 @@ from pydantic import BaseModel
 
 from .config import (
     PORT, SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES,
-    LOGIN_USER, LOGIN_PASSWORD, RECORDINGS_DIR, SITE_URL, SITE_NAME
+    LOGIN_USER, LOGIN_PASSWORD, RECORDINGS_DIR, SITE_URL, SITE_NAME,
+    UGMK_API_KEY
 )
 from .database import history_manager, session_manager
 from .services.llm import get_llm_summary, DOCTOR_PROMPTS, llm
@@ -78,6 +79,9 @@ class CreateSessionRequest(BaseModel):
     doctor_type: str
     patient_name: Optional[str] = None
 
+class UgmkQuestionsRequest(BaseModel):
+    patient_name: str
+
 # --- Auth Helpers ---
 def create_access_token(data: dict):
     to_encode = data.copy()
@@ -117,6 +121,74 @@ async def get_session(token: str):
     
     doc_config = DOCTOR_PROMPTS.get(session["doctor_type"], DOCTOR_PROMPTS["default"])
     return {**session, "config": doc_config}
+
+@app.post("/api/ugmk/questions")
+async def ugmk_questions(req: UgmkQuestionsRequest, x_api_key: Optional[str] = Header(None)):
+    if x_api_key != UGMK_API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid API Key")
+        
+    try:
+        import sys, os
+        sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+        from gender import detect_gender
+        parts = req.patient_name.split()
+        if len(parts) >= 3: gender = detect_gender(lastname=parts[0], firstname=parts[1], middlename=parts[2])
+        elif len(parts) == 2: gender = detect_gender(lastname=parts[0], firstname=parts[1])
+        else: gender = detect_gender(firstname=req.patient_name)
+    except Exception:
+        gender = "androgynous"
+
+    q_base = [
+        "1. Пожалуйста подробно опишите симптомы, которые Вас беспокоят. Если вы испытываете боль укажите ее локализацию, характер, интенсивность по шкале от 0 до 10 баллов. Как часто она возникает и как долго продолжается?",
+        "2. Что может провоцировать, усиливать или облегчать Ваши симптомы?",
+        "3. Как давно у Вас появилась данная проблема? Как развивалось Ваше заболевание? Какое лечение вы уже получали и какой был эффект?",
+        "4. Какие еще болезни у Вас есть? Были ли тяжелые заболевания, травмы и операции?",
+        "5. Бывали ли у Вас аллергические реакции на что-либо? Есть ли аллергия на лекарства?",
+        "6. Испытываете ли постоянно или периодически Вы боль еще в каких-то областях или участках тела?"
+    ]
+    q_hads = "Оцените ваше текущее эмоциональное состояние: испытываете ли вы в последнее время тревогу, напряжение или сниженное настроение?"
+    
+    if gender == 'male':
+        questions = q_base + ["7. Есть ли у Вас проблемы в сексуальной сфере? Испытываете ли Вы половое влечение? Устраивает ли Вас качество эрекции и продолжительность полового акта? Хотели бы Вы обсудить с врачом вопросы Вашей интимной жизни?", f"8. (Опросник HADS) {q_hads}"]
+    elif gender == 'female':
+        questions = q_base + ["7. Расскажите о своем менструальном цикле: сколько дней составляет Ваш цикл, сколько продолжаются кровянистые выделения, насколько они обильные, бывают ли сгустки крови или коричневые выделения. Насколько болезненны месячные?", "8. Актуален ли для Вас вопрос качества сексуальной жизни? Испытываете ли Вы боль или дискомфорт при половом акте? Можете ли достигнуть оргазма? Хотели бы Вы обсудить с врачом вопросы Вашей интимной жизни?", f"9. (Опросник HADS) {q_hads}"]
+    else:
+        questions = q_base + ["7. Актуален ли для Вас вопрос качества сексуальной жизни? Испытываете ли Вы боль или дискомфорт при половом акте? Хотели бы Вы обсудить с врачом вопросы Вашей интимной жизни?", f"8. (Опросник HADS) {q_hads}"]
+
+    return {"gender": gender, "questions": questions}
+
+@app.post("/api/ugmk/transcribe")
+async def ugmk_transcribe(file: UploadFile = File(...), x_api_key: Optional[str] = Header(None)):
+    if x_api_key != UGMK_API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid API Key")
+        
+    record_id = str(uuid.uuid4())
+    temp_path = os.path.join(tempfile.gettempdir(), f"{record_id}.wav")
+    
+    with open(temp_path, "wb") as buffer:
+        import shutil
+        shutil.copyfileobj(file.file, buffer)
+    
+    try:
+        wav_path = os.path.join(tempfile.gettempdir(), f"{record_id}_conv.wav")
+        cmd = ["ffmpeg", "-y", "-i", temp_path, "-ar", "16000", "-ac", "1", wav_path]
+        subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+
+        raw_text = await transcribe_audio_base64(wav_path)
+        text = filter_hallucinations(raw_text)
+
+        if not text or len(text.strip()) < 2:
+            summary = {"error": "Речь не распознана"}
+        else:
+            summary = await get_llm_summary(text, "default", return_json=True)
+
+        return {"id": record_id, "text": text, "summary": summary}
+    except Exception as e:
+        print(f"UGMK Transcription error: {e}")
+        raise HTTPException(status_code=500, detail="Audio processing failed")
+    finally:
+        if os.path.exists(temp_path): os.remove(temp_path)
+        if 'wav_path' in locals() and os.path.exists(wav_path): os.remove(wav_path)
 
 @app.post("/transcribe", response_model=TranscriptionResponse)
 async def transcribe_audio(

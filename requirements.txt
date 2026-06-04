@@ -7,3 +7,4 @@ openai[aiohttp]
 python-dotenv
 aiohttp
 aiofiles
+pytrovich

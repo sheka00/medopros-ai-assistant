@@ -23,6 +23,7 @@ TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 # --- Auth ---
 LOGIN_USER = os.getenv("LOGIN_USER", "admin")
 LOGIN_PASSWORD = os.getenv("LOGIN_PASSWORD", "admin")
+UGMK_API_KEY = os.getenv("UGMK_API_KEY")
 
 # --- Paths ---
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

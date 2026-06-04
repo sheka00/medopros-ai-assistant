@@ -74,10 +74,10 @@ class PatientSummary(BaseModel):
         
         return f'<div class="summary-grid">{"".join(blocks)}</div>' if blocks else "Медицинские данные не обнаружены"
 
-async def get_llm_summary(text: str, doctor_type: str = "default") -> str:
-    if not llm: return "Суммаризация недоступна"
+async def get_llm_summary(text: str, doctor_type: str = "default", return_json: bool = False):
+    if not llm: return {"error": "Суммаризация недоступна"} if return_json else "Суммаризация недоступна"
     if not text.strip() or len(text.strip()) < 5:
-        return "Недостаточно данных для анализа"
+        return {"error": "Недостаточно данных для анализа"} if return_json else "Недостаточно данных для анализа"
         
     config = DOCTOR_PROMPTS.get(doctor_type, DOCTOR_PROMPTS["default"])
     schema = PatientSummary.model_json_schema()
@@ -96,7 +96,7 @@ async def get_llm_summary(text: str, doctor_type: str = "default") -> str:
         if not content: return "Пустой ответ от ИИ"
         
         patient_data = PatientSummary.model_validate_json(content)
-        return patient_data.to_html()
+        return patient_data.model_dump() if return_json else patient_data.to_html()
     except Exception as e:
         print(f"LLM Error: {e}")
-        return "Ошибка при анализе текста нейросетью"
+        return {"error": "Ошибка при анализе текста нейросетью"} if return_json else "Ошибка при анализе текста нейросетью"
