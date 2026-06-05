@@ -1,3 +1,4 @@
+import sys
 import os
 import uuid
 import json
@@ -6,6 +7,13 @@ import tempfile
 import asyncio
 import threading
 import jwt
+
+# Add parent directory to sys.path to import gender.py
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+try:
+    from gender import detect_gender
+except ImportError:
+    def detect_gender(**kwargs): return "androgynous"
 from datetime import datetime, timedelta
 from typing import List, Optional
 from contextlib import asynccontextmanager
@@ -130,9 +138,6 @@ async def ugmk_questions(req: UgmkQuestionsRequest, x_api_key: Optional[str] = H
         raise HTTPException(status_code=401, detail="Invalid API Key")
         
     try:
-        import sys, os
-        sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-        from gender import detect_gender
         parts = req.patient_name.split()
         if len(parts) >= 3: gender = detect_gender(lastname=parts[0], firstname=parts[1], middlename=parts[2])
         elif len(parts) == 2: gender = detect_gender(lastname=parts[0], firstname=parts[1])
