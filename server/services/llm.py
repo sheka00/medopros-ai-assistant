@@ -42,13 +42,13 @@ DOCTOR_PROMPTS = {
 }
 
 class PatientSummary(BaseModel):
-    complaints: List[str] = Field(default_factory=list)
-    duration: Optional[str] = Field(None)
-    medications_taken: List[str] = Field(default_factory=list)
-    past_history: Optional[str] = Field(None)
-    red_flags: List[str] = Field(default_factory=list)
-    additional_info: Optional[str] = Field(None)
-    summary: Optional[str] = Field(None)
+    complaints: List[str] = Field(default_factory=list, description="Список основных жалоб пациента (например, 'головная боль', 'температура 38')")
+    duration: Optional[str] = Field(None, description="Как долго длятся симптомы (например, '3 дня', 'с прошлой недели')")
+    medications_taken: List[str] = Field(default_factory=list, description="Список лекарств или мер лечения, которые пациент уже принял")
+    past_history: Optional[str] = Field(None, description="Анамнез пациента: прошлые заболевания, хронические болезни, операции, аллергии")
+    red_flags: List[str] = Field(default_factory=list, description="Опасные симптомы, требующие срочного внимания (например, 'кровотечение', 'потеря сознания', 'удушье')")
+    additional_info: Optional[str] = Field(None, description="Любая другая важная информация, не вошедшая в другие категории")
+    summary: Optional[str] = Field(None, description="Краткая медицинская выжимка из рассказа пациента на 1-2 предложения")
     
     def to_html(self) -> str:
         blocks = []
