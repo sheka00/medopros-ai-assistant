@@ -4,7 +4,7 @@ import json
 import shutil
 import tempfile
 import asyncio
-import subprocess
+import threading
 import jwt
 from datetime import datetime, timedelta
 from typing import List, Optional
@@ -25,6 +25,8 @@ from .database import history_manager, session_manager
 from .services.llm import get_llm_summary, DOCTOR_PROMPTS, llm
 from .services.asr import transcribe_audio_base64, filter_hallucinations
 from .services.notifier import send_telegram_lead
+
+leads_lock = threading.RLock()
 
 # --- Lifespan ---
 @asynccontextmanager
@@ -165,14 +167,18 @@ async def ugmk_transcribe(file: UploadFile = File(...), x_api_key: Optional[str]
     record_id = str(uuid.uuid4())
     temp_path = os.path.join(tempfile.gettempdir(), f"{record_id}.wav")
     
-    with open(temp_path, "wb") as buffer:
-        import shutil
-        shutil.copyfileobj(file.file, buffer)
+    content = await file.read()
+    def _save_file(path, data):
+        with open(path, "wb") as f: f.write(data)
+    await asyncio.to_thread(_save_file, temp_path, content)
     
     try:
         wav_path = os.path.join(tempfile.gettempdir(), f"{record_id}_conv.wav")
-        cmd = ["ffmpeg", "-y", "-i", temp_path, "-ar", "16000", "-ac", "1", wav_path]
-        subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+        process = await asyncio.create_subprocess_exec(
+            "ffmpeg", "-y", "-i", temp_path, "-ar", "16000", "-ac", "1", wav_path,
+            stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL
+        )
+        await process.communicate()
 
         raw_text = await transcribe_audio_base64(wav_path)
         text = filter_hallucinations(raw_text)
@@ -216,13 +222,18 @@ async def transcribe_audio(
     record_id = str(uuid.uuid4())
     temp_path = os.path.join(tempfile.gettempdir(), f"{record_id}.wav")
     
-    with open(temp_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    content = await file.read()
+    def _save_file(path, data):
+        with open(path, "wb") as f: f.write(data)
+    await asyncio.to_thread(_save_file, temp_path, content)
     
     try:
         wav_path = os.path.join(tempfile.gettempdir(), f"{record_id}_conv.wav")
-        cmd = ["ffmpeg", "-y", "-i", temp_path, "-ar", "16000", "-ac", "1", wav_path]
-        subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+        process = await asyncio.create_subprocess_exec(
+            "ffmpeg", "-y", "-i", temp_path, "-ar", "16000", "-ac", "1", wav_path,
+            stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL
+        )
+        await process.communicate()
 
         raw_text = await transcribe_audio_base64(wav_path)
         text = filter_hallucinations(raw_text)
@@ -236,17 +247,19 @@ async def transcribe_audio(
         print(f"[{record_id}] Summary generated: {summary}")
 
         permanent_path = os.path.join(RECORDINGS_DIR, f"{record_id}.wav")
-        shutil.copy(wav_path, permanent_path)
+        await asyncio.to_thread(shutil.copy, wav_path, permanent_path)
         
-        history_manager.add({
-            "id": record_id,
-            "username": user_identity,
-            "filename": f"{record_id}.wav",
-            "text": text,
-            "summary": summary,
-            "doctor_type": doctor_type,
-            "timestamp": datetime.now().strftime("%d.%m.%Y %H:%M:%S")
-        })
+        def _add_history():
+            history_manager.add({
+                "id": record_id,
+                "username": user_identity,
+                "filename": f"{record_id}.wav",
+                "text": text,
+                "summary": summary,
+                "doctor_type": doctor_type,
+                "timestamp": datetime.now().strftime("%d.%m.%Y %H:%M:%S")
+            })
+        await asyncio.to_thread(_add_history)
         
         if os.path.exists(wav_path): os.remove(wav_path)
         return TranscriptionResponse(id=record_id, text=text, filename=f"{record_id}.wav", summary=summary)
@@ -283,15 +296,18 @@ async def serve_audio(filename: str):
 
 @app.post("/api/contact")
 async def contact_form(req: ContactRequest):
-    leads_file = os.path.join(RECORDINGS_DIR, "leads.json")
-    leads = []
-    if os.path.exists(leads_file):
-        try:
-            with open(leads_file, "r") as f: leads = json.load(f)
-        except: pass
-    
-    leads.append({**req.model_dump(), "timestamp": datetime.now().strftime("%d.%m.%Y %H:%M:%S")})
-    with open(leads_file, "w") as f: json.dump(leads, f, indent=2, ensure_ascii=False)
+    def _add_lead():
+        leads_file = os.path.join(RECORDINGS_DIR, "leads.json")
+        with leads_lock:
+            leads = []
+            if os.path.exists(leads_file):
+                try:
+                    with open(leads_file, "r") as f: leads = json.load(f)
+                except: pass
+            leads.append({**req.model_dump(), "timestamp": datetime.now().strftime("%d.%m.%Y %H:%M:%S")})
+            with open(leads_file, "w") as f: json.dump(leads, f, indent=2, ensure_ascii=False)
+
+    await asyncio.to_thread(_add_lead)
 
     await send_telegram_lead(req.name, req.clinic, req.phone)
     return {"status": "success", "message": "Заявка принята"}
