@@ -181,6 +181,9 @@ async def ugmk_transcribe(file: UploadFile = File(...), x_api_key: Optional[str]
             summary = {"error": "Речь не распознана"}
         else:
             summary = await get_llm_summary(text, "default", return_json=True)
+            
+        print(f"[{record_id}] Transcribed text: {text}")
+        print(f"[{record_id}] Summary generated: {summary}")
 
         return {"id": record_id, "text": text, "summary": summary}
     except Exception as e:
@@ -228,6 +231,9 @@ async def transcribe_audio(
             summary = "Речь не распознана."
         else:
             summary = await get_llm_summary(text, doctor_type)
+            
+        print(f"[{record_id}] Transcribed text: {text}")
+        print(f"[{record_id}] Summary generated: {summary}")
 
         permanent_path = os.path.join(RECORDINGS_DIR, f"{record_id}.wav")
         shutil.copy(wav_path, permanent_path)
