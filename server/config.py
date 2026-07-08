@@ -15,6 +15,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7 # 1 week
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 GPT_MODEL = os.getenv("GPT_MODEL", "openrouter/free")
 AUDIO_MODEL = os.getenv("AUDIO_MODEL", "openai/whisper-large-v3-turbo")
+FALLBACK_AUDIO_MODELS = os.getenv("FALLBACK_AUDIO_MODELS", "google/chirp-3,nvidia/parakeet-tdt-0.6b-v3,openai/whisper-1").split(",")
 
 # --- Notifications ---
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
