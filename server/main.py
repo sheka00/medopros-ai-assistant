@@ -141,8 +141,7 @@ async def get_session(token: str):
     return {**session, "config": doc_config}
 
 @app.post("/api/ugmk/questions")
-@limiter.limit("10/minute")
-async def ugmk_questions(request: Request, req: UgmkQuestionsRequest, x_api_key: Optional[str] = Header(None)):
+async def ugmk_questions(req: UgmkQuestionsRequest, x_api_key: Optional[str] = Header(None)):
     if x_api_key != UGMK_API_KEY:
         raise HTTPException(status_code=401, detail="Invalid API Key")
         
@@ -174,8 +173,7 @@ async def ugmk_questions(request: Request, req: UgmkQuestionsRequest, x_api_key:
     return {"gender": gender, "questions": questions}
 
 @app.post("/api/ugmk/transcribe")
-@limiter.limit("5/minute")
-async def ugmk_transcribe(request: Request, file: UploadFile = File(...), x_api_key: Optional[str] = Header(None)):
+async def ugmk_transcribe(file: UploadFile = File(...), x_api_key: Optional[str] = Header(None)):
     if x_api_key != UGMK_API_KEY:
         raise HTTPException(status_code=401, detail="Invalid API Key")
         
