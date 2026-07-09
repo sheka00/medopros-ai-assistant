@@ -18,11 +18,14 @@ from datetime import datetime, timedelta
 from typing import List, Optional
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, Header
+from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 from .config import (
     PORT, SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES,
@@ -35,6 +38,9 @@ from .services.asr import transcribe_audio_base64, filter_hallucinations
 from .services.notifier import send_telegram_lead
 
 leads_lock = threading.RLock()
+
+# --- Rate Limiter ---
+limiter = Limiter(key_func=get_remote_address)
 
 # --- Lifespan ---
 @asynccontextmanager
@@ -56,6 +62,8 @@ async def lifespan(app: FastAPI):
 
 # --- App Setup ---
 app = FastAPI(lifespan=lifespan)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
@@ -133,7 +141,8 @@ async def get_session(token: str):
     return {**session, "config": doc_config}
 
 @app.post("/api/ugmk/questions")
-async def ugmk_questions(req: UgmkQuestionsRequest, x_api_key: Optional[str] = Header(None)):
+@limiter.limit("10/minute")
+async def ugmk_questions(request: Request, req: UgmkQuestionsRequest, x_api_key: Optional[str] = Header(None)):
     if x_api_key != UGMK_API_KEY:
         raise HTTPException(status_code=401, detail="Invalid API Key")
         
@@ -165,7 +174,8 @@ async def ugmk_questions(req: UgmkQuestionsRequest, x_api_key: Optional[str] = H
     return {"gender": gender, "questions": questions}
 
 @app.post("/api/ugmk/transcribe")
-async def ugmk_transcribe(file: UploadFile = File(...), x_api_key: Optional[str] = Header(None)):
+@limiter.limit("5/minute")
+async def ugmk_transcribe(request: Request, file: UploadFile = File(...), x_api_key: Optional[str] = Header(None)):
     if x_api_key != UGMK_API_KEY:
         raise HTTPException(status_code=401, detail="Invalid API Key")
         
@@ -205,7 +215,9 @@ async def ugmk_transcribe(file: UploadFile = File(...), x_api_key: Optional[str]
         if 'wav_path' in locals() and os.path.exists(wav_path): os.remove(wav_path)
 
 @app.post("/transcribe", response_model=TranscriptionResponse)
+@limiter.limit("10/minute")
 async def transcribe_audio(
+    request: Request,
     file: UploadFile = File(...), 
     authorization: Optional[str] = Header(None),
     token: Optional[str] = Header(None)
@@ -302,7 +314,8 @@ async def serve_audio(filename: str):
     return FileResponse(path, media_type="audio/wav")
 
 @app.post("/api/contact")
-async def contact_form(req: ContactRequest):
+@limiter.limit("3/minute")
+async def contact_form(request: Request, req: ContactRequest):
     def _add_lead():
         leads_file = os.path.join(RECORDINGS_DIR, "leads.json")
         with leads_lock:
