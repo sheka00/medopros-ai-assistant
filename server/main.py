@@ -210,7 +210,7 @@ async def transcribe_audio(
     authorization: Optional[str] = Header(None),
     token: Optional[str] = Header(None)
 ):
-    user_identity = "Анонимный гость"
+    user_identity = None
     doctor_type = "default"
     
     if authorization:
@@ -223,6 +223,8 @@ async def transcribe_audio(
         user_identity = f"Пациент: {session.get('patient_name', 'Неизвестно')}"
         doctor_type = session["doctor_type"]
         session_manager.mark_used(token)
+    else:
+        raise HTTPException(status_code=401, detail="Authorization required")
     
     record_id = str(uuid.uuid4())
     temp_path = os.path.join(tempfile.gettempdir(), f"{record_id}.wav")
@@ -275,11 +277,11 @@ async def transcribe_audio(
         if os.path.exists(temp_path): os.remove(temp_path)
 
 @app.get("/api/history", response_model=List[dict])
-async def get_history():
+async def get_history(current_user: dict = Depends(get_current_user)):
     return history_manager.get_all()
 
 @app.delete("/api/history/{record_id}")
-async def delete_record(record_id: str):
+async def delete_record(record_id: str, current_user: dict = Depends(get_current_user)):
     record = history_manager.get_by_id(record_id)
     if not record: raise HTTPException(status_code=404)
     
