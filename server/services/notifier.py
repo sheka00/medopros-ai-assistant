@@ -32,7 +32,10 @@ async def send_telegram_lead(name: str, clinic: str, phone: str):
 async def send_telegram_alert(error_msg: str):
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
         return False
-        
+
+    # бэктик внутри code-блока ломает Markdown -> Telegram отдаст 400 и алерт потеряется
+    error_msg = error_msg.replace("`", "'")[:3000]
+
     message = (
         f"🚨 *ОШИБКА РАСПОЗНАВАНИЯ АУДИО*\n\n"
         f"Внимание! Не удалось расшифровать голосовое сообщение от пациента.\n\n"
@@ -48,8 +51,10 @@ async def send_telegram_alert(error_msg: str):
                 "text": message,
                 "parse_mode": "Markdown"
             }
-            await client.post(url, json=payload, timeout=5.0)
-            return True
+            res = await client.post(url, json=payload, timeout=5.0)
+            if not res.is_success:
+                print(f"❌ Telegram alert rejected: HTTP {res.status_code} {res.text}")
+            return res.is_success
     except Exception as e:
         print(f"❌ Telegram alert error: {e}")
         return False

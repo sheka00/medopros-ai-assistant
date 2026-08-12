@@ -178,7 +178,8 @@ async def convert_to_wav(src_path: str, dst_path: str):
         raise RuntimeError(f"Пустой или отсутствующий входной файл: {src_path}")
 
     process = await asyncio.create_subprocess_exec(
-        "ffmpeg", "-y", "-i", src_path, "-ar", "16000", "-ac", "1", dst_path,
+        "ffmpeg", "-hide_banner", "-loglevel", "error",
+        "-y", "-i", src_path, "-ar", "16000", "-ac", "1", dst_path,
         stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.PIPE
     )
     _, stderr = await process.communicate()
