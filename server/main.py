@@ -29,13 +29,13 @@ from slowapi.errors import RateLimitExceeded
 
 from .config import (
     PORT, SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES,
-    LOGIN_USER, LOGIN_PASSWORD, RECORDINGS_DIR, SITE_URL, SITE_NAME,
+    LOGIN_USER, LOGIN_PASSWORD, RECORDINGS_DIR, FAILED_DIR, SITE_URL, SITE_NAME,
     UGMK_API_KEY
 )
 from .database import history_manager, session_manager
 from .services.llm import get_llm_summary, DOCTOR_PROMPTS, llm
 from .services.asr import transcribe_audio_base64, filter_hallucinations
-from .services.notifier import send_telegram_lead
+from .services.notifier import send_telegram_lead, send_telegram_alert
 
 leads_lock = threading.RLock()
 
@@ -172,6 +172,51 @@ async def ugmk_questions(req: UgmkQuestionsRequest, x_api_key: Optional[str] = H
 
     return {"gender": gender, "questions": questions}
 
+async def convert_to_wav(src_path: str, dst_path: str):
+    """Конвертирует аудио в 16kHz mono WAV. Кидает RuntimeError с реальной причиной от ffmpeg."""
+    if not os.path.exists(src_path) or os.path.getsize(src_path) == 0:
+        raise RuntimeError(f"Пустой или отсутствующий входной файл: {src_path}")
+
+    process = await asyncio.create_subprocess_exec(
+        "ffmpeg", "-y", "-i", src_path, "-ar", "16000", "-ac", "1", dst_path,
+        stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.PIPE
+    )
+    _, stderr = await process.communicate()
+    err_tail = "\n".join(stderr.decode("utf-8", "replace").strip().splitlines()[-5:])
+
+    if process.returncode != 0:
+        raise RuntimeError(
+            f"ffmpeg вернул код {process.returncode} "
+            f"(вход: {os.path.getsize(src_path)} байт)\n{err_tail}"
+        )
+    if not os.path.exists(dst_path) or os.path.getsize(dst_path) == 0:
+        raise RuntimeError(f"ffmpeg отработал, но {dst_path} пуст или не создан\n{err_tail}")
+
+def preserve_failed_input(record_id: str, src_path: str, file: UploadFile) -> str:
+    """Складывает не сконвертировавшийся файл в data/failed/ и возвращает описание для алерта."""
+    size = os.path.getsize(src_path) if os.path.exists(src_path) else 0
+    head = b""
+    try:
+        with open(src_path, "rb") as f: head = f.read(16)
+    except OSError: pass
+
+    info = (f"имя='{file.filename}' content_type='{file.content_type}' "
+            f"размер={size} байт сигнатура={head.hex()}")
+
+    try:
+        os.makedirs(FAILED_DIR, exist_ok=True)
+        # держим только последние 20 образцов, чтобы не забить диск
+        old = sorted(os.listdir(FAILED_DIR))
+        for name in old[:max(0, len(old) - 19)]:
+            os.remove(os.path.join(FAILED_DIR, name))
+        if size:
+            shutil.copy(src_path, os.path.join(FAILED_DIR, f"{record_id}.bin"))
+            info += f"\nОбразец сохранён: data/failed/{record_id}.bin"
+    except OSError as e:
+        info += f"\nНе удалось сохранить образец: {e}"
+
+    return info
+
 @app.post("/api/ugmk/transcribe")
 async def ugmk_transcribe(file: UploadFile = File(...), x_api_key: Optional[str] = Header(None)):
     if x_api_key != UGMK_API_KEY:
@@ -187,11 +232,7 @@ async def ugmk_transcribe(file: UploadFile = File(...), x_api_key: Optional[str]
     
     try:
         wav_path = os.path.join(tempfile.gettempdir(), f"{record_id}_conv.wav")
-        process = await asyncio.create_subprocess_exec(
-            "ffmpeg", "-y", "-i", temp_path, "-ar", "16000", "-ac", "1", wav_path,
-            stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL
-        )
-        await process.communicate()
+        await convert_to_wav(temp_path, wav_path)
 
         raw_text = await transcribe_audio_base64(wav_path)
         text = filter_hallucinations(raw_text)
@@ -206,7 +247,11 @@ async def ugmk_transcribe(file: UploadFile = File(...), x_api_key: Optional[str]
 
         return {"id": record_id, "text": text, "summary": summary}
     except Exception as e:
-        print(f"UGMK Transcription error: {e}")
+        details = f"UGMK, обработка аудио ({record_id}):\n{e}"
+        if isinstance(e, RuntimeError):  # сбой конвертации — сохраняем исходник для разбора
+            details += "\n" + await asyncio.to_thread(preserve_failed_input, record_id, temp_path, file)
+        print(f"UGMK Transcription error [{record_id}]: {details}")
+        await send_telegram_alert(details)
         raise HTTPException(status_code=500, detail="Audio processing failed")
     finally:
         if os.path.exists(temp_path): os.remove(temp_path)
@@ -246,11 +291,7 @@ async def transcribe_audio(
     
     try:
         wav_path = os.path.join(tempfile.gettempdir(), f"{record_id}_conv.wav")
-        process = await asyncio.create_subprocess_exec(
-            "ffmpeg", "-y", "-i", temp_path, "-ar", "16000", "-ac", "1", wav_path,
-            stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL
-        )
-        await process.communicate()
+        await convert_to_wav(temp_path, wav_path)
 
         raw_text = await transcribe_audio_base64(wav_path)
         text = filter_hallucinations(raw_text)
@@ -281,10 +322,15 @@ async def transcribe_audio(
         if os.path.exists(wav_path): os.remove(wav_path)
         return TranscriptionResponse(id=record_id, text=text, filename=f"{record_id}.wav", summary=summary)
     except Exception as e:
-        print(f"Transcription error: {e}")
+        details = f"Обработка аудио ({record_id}):\n{e}"
+        if isinstance(e, RuntimeError):
+            details += "\n" + await asyncio.to_thread(preserve_failed_input, record_id, temp_path, file)
+        print(f"Transcription error [{record_id}]: {details}")
+        await send_telegram_alert(details)
         raise HTTPException(status_code=500, detail="Audio processing failed")
     finally:
         if os.path.exists(temp_path): os.remove(temp_path)
+        if 'wav_path' in locals() and os.path.exists(wav_path): os.remove(wav_path)
 
 @app.get("/api/history", response_model=List[dict])
 async def get_history(current_user: dict = Depends(get_current_user)):

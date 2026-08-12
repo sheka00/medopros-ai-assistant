@@ -30,6 +30,7 @@ UGMK_API_KEY = os.getenv("UGMK_API_KEY")
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 RECORDINGS_DIR = os.path.join(DATA_DIR, "recordings")
+FAILED_DIR = os.path.join(DATA_DIR, "failed")
 
 if not os.path.exists(RECORDINGS_DIR):
     os.makedirs(RECORDINGS_DIR)
