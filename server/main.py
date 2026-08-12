@@ -227,6 +227,8 @@ async def ugmk_transcribe(file: UploadFile = File(...), x_api_key: Optional[str]
     temp_path = os.path.join(tempfile.gettempdir(), f"{record_id}.wav")
     
     content = await file.read()
+    print(f"[{record_id}] upload: имя='{file.filename}' type='{file.content_type}' "
+          f"{len(content)} байт сигнатура={content[:16].hex()}")
     def _save_file(path, data):
         with open(path, "wb") as f: f.write(data)
     await asyncio.to_thread(_save_file, temp_path, content)
@@ -286,6 +288,8 @@ async def transcribe_audio(
     temp_path = os.path.join(tempfile.gettempdir(), f"{record_id}.wav")
     
     content = await file.read()
+    print(f"[{record_id}] upload: имя='{file.filename}' type='{file.content_type}' "
+          f"{len(content)} байт сигнатура={content[:16].hex()}")
     def _save_file(path, data):
         with open(path, "wb") as f: f.write(data)
     await asyncio.to_thread(_save_file, temp_path, content)
